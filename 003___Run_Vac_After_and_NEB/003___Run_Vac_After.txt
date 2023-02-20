@@ -1,0 +1,29 @@
+<Vac_after 폴더 생성>
+0. 준비물
+각 조성별로 
+	$ folder/composition/ 
+폴더 안에 아래 파일들 이름으로 준비
+    POSCAR_perfect_cell (이전에 selected_vac 만들 때 썼던, relax 직후의 CONTCAR)
+    POSCAR_defect_cell (vacancy 구조 만들고 *relax하기 전* POSCAR)
+	POSCAR_i (vacancy 구조 만들고 *relax한 후* POSCAR)
+    POTCAR, KPOINTS, INCAR, INCAR_NEB (NEB용 INCAR)
+    batch.j, batch_NEB.j (NEB용 batch파일)
+	
+perfect_cell은 relax 직후, defect_cell은 relax전으로 사용 (모든 atom이 제 자리 유지)
+INCAR_NEB 파일은 ### make_INCAR_NEB.py ### 내부에 설정들을 만져주고
+	$ python make_INCAR_NEB.py *folder*
+하면 folder 내의 각 조성 폴더 안에 *INCAR_NEB* 파일을 생성해줌.
+
+vac_after용 INCAR를 바꾸려면 ### make_INCAR_for_relax.py ### 코드를 마찬가지로 이용하면 됨.
+
+1. vac_after 폴더 생성 후 run
+###run_after.sh### 내에 ###vacancy_after_NEB.py### 코드의 path와 run할 폴더 path(line 2) 설정한 뒤에
+	$ sh run_after.sh
+를 실행하면 각 폴더 내에서 vacancy_after_NEB.py를 실행함. 이 코드는 POSCAR_perfect_cell와 POSCAR_defect_cell를 비교하여 migration 이후의 POSCAR를 모두 생성하고, 그 중 하나를 무작위로 골라 'O102_to_O38'과 같이 migration path이름에 해당하는 폴더를 생성함. 그 안에 *relax_after*라는 폴더 내에 POSCAR, INCAR, KPOINTS, POTCAR, batch파일을 복사해줌.
+
+2. NEB 폴더 생성
+relax_after가 끝나면 ###make_NEB_folder.py###를 이용해
+	$ python make_NEB_folder.py *folder*
+를 입력하면 각각의 relax_after 폴더에서 CONTCAR를 POSCAR_f로 복사한 후
+	$ nebmake.pl POSCAR_i POSCAR_f *NIMAGES*
+와 같이 실행해 줌. IMAGE 개수 조절을 위해 make_NEB_folder.py의 코드를 수정할 필요가 있음.
