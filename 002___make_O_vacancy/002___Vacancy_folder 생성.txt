@@ -1,0 +1,32 @@
+<O Vacancy 계산 folder 생성>
+0. 준비물
+조성 *composition_1*, *composition_2*, ...에 대해 아래와 같이 준비
+	$ folder/composition_1/{INCAR,KPOINTS,POSCAR,POTCAR}
+	$ folder/composition_2/{INCAR,KPOINTS,POSCAR,POTCAR}
+
+1. vacancy 계산용 INCAR 생성
+###make_INCAR_for_vacancy.py### 또는 ###make_INCAR_for_vacancy.sh### 둘 중 편한 걸로
+안에 INCAR setting은 계산 상황에 맞게 옵션을 바꾼 뒤 
+	$ sh make_INCAR_for_vacancy.sh (이 경우 path는 파일 내부에 입력)
+혹은
+	$ python make_INCAR_for_vacancy.py *folder*
+하면 각 조성 내에 INCAR_vac 파일을 만들어 줌.
+
+2. make_O_vacancy.py : 모든 vacancy folder 생성
+	$ python make_O_vacancy.py *folder*
+실행 시 각 composition 폴더 내에 vacancy를 local environment에 따라 type별로 분류해 POSCAR를 생성함.
+이 때 local environment는 perovskite의 oxygen 기준으로 1NN 2개와 2NN 4개의 총 6개를 고려함.
+skin_depth 등을 조절해 local environment atom 개수가 총 6개가 되도록 맞추며, 같은 local environment끼리는
+각 vacancy type별 폴더 내에 _0, _1, ...와 같이 이름이 부여됨.
+
+3. vacancy POSCAR 선택 및 계산 폴더 생성
+	$ python pick_n_make_folder.py *folder*
+하면 각 조성별로 조건에 맞는 vacancy_type 중 무작위로 하나를 골라 selected_vac이라는 폴더를 만들고 안에
+	INCAR POTCAR KPOINTS POSCAR batch.j
+의 파일을 넣어줌. python 코드 내에 
+	1) batch file path와 
+	2) 조성을 고를 조건
+을 입력해야 함. (현재는 조건을 'Ti2'와 같이 주면 각 vacancy_type 폴더의 이름을 검사하는 식으로 단순하게 되어 있음)
+
+4. 기타 복사용 코드
+cp_results.sh move_done.sh run.sh는 이동, 복사 편의상 사용한 코드들입니다
