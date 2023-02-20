@@ -1,0 +1,32 @@
+<SQS 생성>
+1. composition 파일 작성
+###write_composition_input.py###에 원하는 조성군 입력 (--> *test*라는 파일 생성)
+
+2. unit cell 정보 입력
+###make_SQS_input.py###에 20~43번째 줄 수정
+	$ python make_SQS_input.py *test* 
+하면 각 조성별 폴더를 *composition_1*, *composition_2*, ...와 같이 생성하고 안에 *rndstr.in*이라는 input file 생성
+
+3. 각 폴더별로 SQS run
+단일 계산은 조성 폴더 내에서 ###make_SQS.sh### 실행하면 됨. 명령어 구조는 다음과 같은데 (★ 자세한 내용은 https://cniu.me/2017/08/05/SQS.html 참고)
+	$ corrdump -l=rndstr.in -ro -noe -nop -clus -2=0.9 -3=0.9
+	$ cp ../sqscell.out .
+	$ mcsqs -rc
+여기서 corrdump는 SQS를 실행할 가능한 모든 구조를 return해 *sqscell.out*이라는 파일로 출력.
+이 상태로 그대로 SQS를 돌리는 command인 mcsqs를 돌리면 가능한 모든 cell에 대해서 돌리기 때문에 계산이 오래 걸림.
+그래서 그냥 cubic, 혹은 symmetric한 cell로 미리 sqscell.out파일을 조성 폴더 바깥에 만들어 놓고 복사함.
+그리고 이 sqscell.out을 그대로 사용하는 mcsqs command가 
+	$ mcsqs -rc
+임. 위 내용들이 전부 저 링크에 자세히 설명되어 있으니 꼭 읽어보는 것을 추천드립니다.
+
+4. MCSQS 완료 혹은 중단
+원래는 optimal한 구조를 찾으면 bestcorr.out에 "objective_function=perfect_match"와 같이 출력되는데, 실제 돌려보면 안 찾아지는 경우가 많음.
+따라서 적당한 시점에서 끊고 갖다가 쓰면 됨. Original ATAT code에서는 매번 더 최적의 구조를 찾을때마다 log파일인 bestcorr와 구조 파일인 bestsqs가 덮어씌워짐.
+이를 매번 찾을때마다 이전 기록을 보존하도록 하는 컴파일 방식을 위 링크에서 소개하고 있으니 갖다가 쓰면 됨.
+
+5. sqs file --> POSCAR
+###sqs2poscar.sh### 파일에 scale factor를 입력 (SQS는 모두 scale 1 기준으로 작성되니, 단위 길이에 해당하는 scale을 꼭 입력해야 함.) 하고
+	$ sh sqs2poscar.sh
+를 입력하면 각 폴더 내의 가장 최신 bestsqs 파일을 읽어서 POSCAR 형태로 바꿔줌.
+이때 필요한 코드가 C++로 작성된 ###sqs2poscar### 코드인데, 이 역시 위 링크에서 소개하고 있으니 갖다가 컴파일해서 쓰면 됨.
+다만 이 코드로 돌리면 POSCAR파일이 scale factor가 "xxx"로 된 상태로 출력되므로, 이를 "_POSCAR" 파일로 저장한 뒤 한 번 치환해서 "POSCAR"를 만드는 구조로 되어 있음.
